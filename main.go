@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/apex/gateway"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -40,6 +41,18 @@ func setupRouter() *gin.Engine {
 
 	apiRouter.POST("/newclient", func(ctx *gin.Context) {
 		routers.PostCliente(ctx, logs, dynamoClient)
+	})
+
+	apiRouter.PUT("/:nome/:operation/:valor", func(ctx *gin.Context) {
+		Nome := ctx.Param("nome")
+		Operation := ctx.Param("operation")
+
+		// Pegar o valor para tranforamr em float
+		ValorS := ctx.Param("valor")
+		ValorF, err := strconv.ParseFloat(ValorS, 64)
+		logar.Check(err, logs)
+
+		routers.PutSaldo(ctx, logs, dynamoClient, Nome, Operation, ValorF)
 	})
 
 	return apiRouter
