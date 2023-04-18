@@ -28,7 +28,7 @@ func PostCliente(c *gin.Context, log logar.Logfile, client *dynamodb.Client) {
 // GetSaldo retorna o saldo de um cliente
 func GetSaldo(c *gin.Context, log logar.Logfile, client *dynamodb.Client, nome string) {
 	saldo := query.GetSaldo(client, nome, log)
-	retorno := "Saldo Pc§:" + fmt.Sprintf("%.2f", saldo)
+	retorno := fmt.Sprintf("%.2f", saldo)
 	c.IndentedJSON(http.StatusOK, retorno)
 }
 
