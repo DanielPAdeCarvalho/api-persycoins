@@ -43,6 +43,7 @@ func setupRouter() *gin.Engine {
 		routers.PostCliente(ctx, logs, dynamoClient)
 	})
 
+	// As operaçoes sao sub ou add
 	apiRouter.PUT("/:nome/:operation/:valor", func(ctx *gin.Context) {
 		Nome := ctx.Param("nome")
 		Operation := ctx.Param("operation")
