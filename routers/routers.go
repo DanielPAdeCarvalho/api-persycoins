@@ -32,6 +32,12 @@ func GetSaldo(c *gin.Context, log logar.Logfile, client *dynamodb.Client, nome s
 	c.IndentedJSON(http.StatusOK, retorno)
 }
 
+func GetSaldoByMail(c *gin.Context, log logar.Logfile, client *dynamodb.Client, mail string) {
+	saldo := query.GetSaldoByMail(client, mail, log)
+	retorno := fmt.Sprintf("%.2f", saldo)
+	c.IndentedJSON(http.StatusOK, retorno)
+}
+
 // PutSaldo atualiza o saldo de um cliente
 func PutSaldo(c *gin.Context, log logar.Logfile, client *dynamodb.Client, nome string, operation string, valor float64) {
 	query.UpdateSaldo(log, client, nome, operation, valor)

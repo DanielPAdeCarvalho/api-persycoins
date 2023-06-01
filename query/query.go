@@ -81,3 +81,35 @@ func UpdateSaldo(log logar.Logfile, client *dynamodb.Client, nome string, operat
 	_, err := client.UpdateItem(context.TODO(), input)
 	logar.Check(err, log)
 }
+
+// GetSaldoByMail retorna o saldo de um cliente
+func GetSaldoByMail(client *dynamodb.Client, mail string, log logar.Logfile) float64 {
+	input := &dynamodb.ScanInput{
+		TableName: aws.String("LoginCliente"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":m": &types.AttributeValueMemberS{
+				Value: mail,
+			},
+		},
+		FilterExpression: aws.String("Mail = :m"),
+	}
+
+	pager := dynamodb.NewScanPaginator(client, input)
+
+	var saldo float64
+	for pager.HasMorePages() {
+		page, err := pager.NextPage(context.Background())
+		logar.Check(err, log)
+
+		for _, item := range page.Items {
+			result, ok := item["Email"]
+			if !ok {
+				log.ErrorLogger.Println("Email não encontrado")
+				continue
+			}
+
+			return saldo
+		}
+	}
+	return saldo
+}

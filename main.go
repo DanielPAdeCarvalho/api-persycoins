@@ -39,6 +39,11 @@ func setupRouter() *gin.Engine {
 		routers.GetSaldo(ctx, logs, dynamoClient, Nome)
 	})
 
+	apiRouter.GET("/mail/:email", func(ctx *gin.Context) {
+		Email := ctx.Param("email")
+		routers.GetSaldoByMail(ctx, logs, dynamoClient, Email)
+	})
+
 	apiRouter.POST("/newclient", func(ctx *gin.Context) {
 		routers.PostCliente(ctx, logs, dynamoClient)
 	})
