@@ -83,9 +83,12 @@ func UpdateSaldo(log logar.Logfile, client *dynamodb.Client, nome string, operat
 }
 
 // GetSaldoByMail retorna o saldo de um cliente
-func GetSaldoByMail(client *dynamodb.Client, mail string, log logar.Logfile) float64 {
+func GetSaldoByMail(client *dynamodb.Client, mail string, log logar.Logfile) string {
 	nome, sobrenome := GetNomeSobrenomeByEmail(client, mail, log)
-	return GetSaldo(client, nome+" "+sobrenome, log)
+	saldo := GetSaldo(client, nome+" "+sobrenome, log)
+	retorno := nome + " " + sobrenome + " " + fmt.Sprintf("%.2f", saldo)
+	return retorno
+
 }
 
 func GetNomeSobrenomeByEmail(client *dynamodb.Client, email string, log logar.Logfile) (string, string) {
