@@ -84,32 +84,45 @@ func UpdateSaldo(log logar.Logfile, client *dynamodb.Client, nome string, operat
 
 // GetSaldoByMail retorna o saldo de um cliente
 func GetSaldoByMail(client *dynamodb.Client, mail string, log logar.Logfile) float64 {
+	nome, sobrenome := GetNomeSobrenomeByEmail(client, mail, log)
+	return GetSaldo(client, nome+" "+sobrenome, log)
+}
+
+func GetNomeSobrenomeByEmail(client *dynamodb.Client, email string, log logar.Logfile) (string, string) {
 	input := &dynamodb.ScanInput{
 		TableName: aws.String("LoginCliente"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":m": &types.AttributeValueMemberS{
-				Value: mail,
+			":e": &types.AttributeValueMemberS{
+				Value: email,
 			},
 		},
-		FilterExpression: aws.String("Mail = :m"),
+		FilterExpression: aws.String("Email = :e"),
 	}
 
 	pager := dynamodb.NewScanPaginator(client, input)
 
-	var saldo float64
+	var nome, sobrenome string
 	for pager.HasMorePages() {
 		page, err := pager.NextPage(context.Background())
 		logar.Check(err, log)
 
 		for _, item := range page.Items {
-			result, ok := item["Email"]
+			nomeValue, ok := item["Nome"].(*types.AttributeValueMemberS)
 			if !ok {
-				log.ErrorLogger.Println("Email não encontrado")
+				log.ErrorLogger.Println("Nome não encontrado")
 				continue
 			}
 
-			return saldo
+			sobrenomeValue, ok := item["Sobrenome"].(*types.AttributeValueMemberS)
+			if !ok {
+				log.ErrorLogger.Println("Sobrenome não encontrado")
+				continue
+			}
+
+			nome = nomeValue.Value
+			sobrenome = sobrenomeValue.Value
+			return nome, sobrenome
 		}
 	}
-	return saldo
+	return nome, sobrenome
 }
