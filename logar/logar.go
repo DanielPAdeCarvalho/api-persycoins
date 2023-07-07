@@ -15,3 +15,9 @@ func Check(erro error, logar Logfile) {
 		logar.ErrorLogger.Fatal(erro)
 	}
 }
+
+func CheckInfo(erro error, logar Logfile) {
+	if erro != nil {
+		logar.InfoLogger.Println(erro)
+	}
+}

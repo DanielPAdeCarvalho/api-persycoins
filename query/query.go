@@ -15,15 +15,34 @@ import (
 
 // InsertCliente insere um novo cliente no banco
 func InsertCliente(client *dynamodb.Client, PersyCoins models.PersyCoins, log logar.Logfile) {
-	coins, err := attributevalue.MarshalMap(PersyCoins)
-	logar.Check(err, log)
+	nomeCompleto := PersyCoins.Nome + " " + PersyCoins.Sobrenome
+	PersyCoins.Nome = nomeCompleto
+	if GetSaldo(client, PersyCoins.Nome, log) > 0 {
+		input := &dynamodb.UpdateItemInput{
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":e": &types.AttributeValueMemberS{Value: PersyCoins.Email},
+			},
+			TableName: aws.String("PersyCoins"),
+			Key: map[string]types.AttributeValue{
+				"Nome": &types.AttributeValueMemberS{Value: PersyCoins.Nome},
+			},
+			ReturnValues:     types.ReturnValueUpdatedNew,
+			UpdateExpression: aws.String("set Email = :e"),
+		}
 
-	input := &dynamodb.PutItemInput{
-		TableName: aws.String("PersyCoins"),
-		Item:      coins,
+		_, err := client.UpdateItem(context.Background(), input)
+		logar.Check(err, log)
+	} else {
+		coins, err := attributevalue.MarshalMap(PersyCoins)
+		logar.Check(err, log)
+
+		input := &dynamodb.PutItemInput{
+			TableName: aws.String("PersyCoins"),
+			Item:      coins,
+		}
+		_, err = client.PutItem(context.Background(), input)
+		logar.Check(err, log)
 	}
-	_, err = client.PutItem(context.Background(), input)
-	logar.Check(err, log)
 }
 
 // GetSaldo retorna o saldo de um cliente
@@ -31,7 +50,7 @@ func GetSaldo(client *dynamodb.Client, nome string, log logar.Logfile) float64 {
 	key, err := attributevalue.MarshalMap(map[string]interface{}{
 		"Nome": nome,
 	})
-	logar.Check(err, log)
+	logar.CheckInfo(err, log)
 
 	input := &dynamodb.GetItemInput{
 		TableName: aws.String("PersyCoins"),
@@ -40,20 +59,20 @@ func GetSaldo(client *dynamodb.Client, nome string, log logar.Logfile) float64 {
 
 	// Call the GetItem method with the input
 	resp, err := client.GetItem(context.TODO(), input)
-	logar.Check(err, log)
+	logar.CheckInfo(err, log)
 	if resp.Item == nil {
-		log.ErrorLogger.Println("Cliente não encontrado")
+		log.InfoLogger.Println("Cliente não encontrado")
 	}
 
 	// Get the Saldo attribute value
 	saldoValue, ok := resp.Item["Saldo"]
 	if !ok {
-		log.ErrorLogger.Println("Saldo não encontrado")
+		log.InfoLogger.Println("Saldo não encontrado")
 	}
 
 	saldoN := saldoValue.(*types.AttributeValueMemberN)
 	saldo, err := strconv.ParseFloat(saldoN.Value, 64)
-	logar.Check(err, log)
+	logar.CheckInfo(err, log)
 
 	return saldo
 }
